@@ -1,4 +1,4 @@
-# 농업 환경 변화에 따른 작물 병해 진단 AI 경진대회 ([링크][competition_site]])  
+# 농업 환경 변화에 따른 작물 병해 진단 AI 경진대회 ([Link][competition_site]])  
 [competition_site]: https://dacon.io/competitions/official/235870/overview/description
 
 ## 1. 개요  
@@ -12,9 +12,9 @@ python==3.8.5
 numpy==1.21.2  
 torch==1.9.0  
 timm==0.5.4  
-albumentation  
-pandas
-scikit-learn
+albumentation    
+pandas  
+scikit-learn  
 tqdm  
 
 ## 3. 개발환경 설치

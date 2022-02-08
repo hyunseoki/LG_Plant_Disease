@@ -17,32 +17,6 @@ import numpy as np
 
 
 if __name__ == '__main__':
-    # user's parameters
-    os.environ['CUDA_VISIBLE_DIVICES'] = '0'
-    _base_dir = '../'
-    _num_gpus = 1
-    _batch_size = 16
-    _trainset_ratio = 0.8
-    _sample_dir = os.path.join(_base_dir, 'data')
-
-    _csv_dir = _sample_dir
-    _images_dir = os.path.join(
-        _sample_dir,
-        'train'
-    )
-    _log_dir = os.path.join(_base_dir, 'logs_disease')
-    _imbalanced_ds = True
-    _data_augmentation = True
-    _data_preprocessing = True
-    _logits = True
-    _num_classes = 25
-    _epochs = 100
-    _lr_begin = 0.0005
-    _onehot = False
-    _max_seq_length = 60
-
-    print("START TRAINING")
-
 	# user's parameters
 	os.environ['CUDA_VISIBLE_DIVICES'] = '0'
 	_base_dir = '../'
@@ -69,12 +43,6 @@ if __name__ == '__main__':
 
 	print("START TRAINING")
 
-	# non-pretrained cnn
-	_model_cnn = EfficientNet.from_pretrained(
-		'efficientnet-b0', num_classes=_num_classes
-	)
-
-	# pretrained rnn
 	_model_rnn = LSTM(
 		input_dim=9,
 		output_dim=_num_classes,
@@ -82,25 +50,11 @@ if __name__ == '__main__':
 		num_layers=1
 	)
 
-	weight_path_rnn = os.path.join(
-		_base_dir,
-		'trained_rnn_weights',
-		'best_model.pth'
-	)
-	_model_rnn.load_state_dict(torch.load(weight_path_rnn))
-
-	_model = EnsembleModel(
-		model_cnn=_model_cnn,
-		model_rnn=_model_rnn,
-		num_classes=_num_classes
-	)
-
-	# merge cnn & rnn
 	categorical_classifier = CategoricalClassifier(
-		model=_model,
+		model=_model_rnn,
 		device='cuda',
 		num_gpus=_num_gpus,
-		mode='combined' # 'cnn', 'rnn', 'combined'
+		mode='rnn' # 'cnn', 'rnn', 'combined'
 		# weight_path='./best_model.pth'
 	)
 

@@ -1,8 +1,9 @@
 import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 import torch
 import torch.nn as nn
 import numpy as np
-
+import argparse
 from efficientnet_pytorch import EfficientNet
 from src import DaconLSTM
 
@@ -41,26 +42,38 @@ class EnsembleModel(nn.Module):
 if __name__ == '__main__':
 	start_time = time.time()
 
-	# torch.backends.cudnn.benchmark = True
 	torch.autograd.set_detect_anomaly(False)
 	torch.autograd.profiler.profile(False)
 	torch.autograd.profiler.emit_nvtx(False)
+	
+	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--base_folder', type=str, default='./data/test')
+	parser.add_argument('--save_folder', type=str, default='./submission')
+	parser.add_argument('--weight_fn', type=str, default='./weights/submission_0201_001/best_model.pth')
+	# parser.add_argument('--label_fn', type=str, default='./data/sample_submission.csv')
+
+	parser.add_argument('--device', type=str, default=device)
+
+	args = parser.parse_args()
 
 	# _base_dir = '/home/mongmong/Desktop/dacon/plant_disease/'
-	_base_dir = './'
-        
-	_sample_dir = os.path.join(_base_dir, 'data', 'test')
-	_csv_dir = os.path.join(_base_dir, 'data')
-	_csv_saved_dir = os.path.join(_base_dir, 'submission')
+	# _base_dir = './'
 
-	_log_dir = os.path.join(_base_dir, 'checkpoint','submission_0201_001')
-	_model_path = os.path.join(_log_dir, 'best_model.pth')
+	# _sample_dir = os.path.join(_base_dir, 'data', 'test')
+	# _csv_saved_dir = os.path.join(_base_dir, 'submission')
+
+	# _log_dir = os.path.join(_base_dir, 'checkpoint','submission_0201_001')
+	# _model_path = os.path.join(_log_dir, 'best_model.pth')
+
+	_sample_dir = args.base_folder
+	_csv_saved_dir = args.save_folder
+	_model_path = args.weight_fn
 
 	_num_classes = 25
 	_max_seq_length = 60
 	_batch_size = 32
-	_data_preprocessing = True
-	_logits = True
 	_onehot = False
 	_device = 'cuda'
 	_mode = 'combined'
@@ -155,7 +168,3 @@ if __name__ == '__main__':
 	end_time = time.time()
 
 	print("SPENDING TIME: ", end_time - start_time)
-
-
-
-

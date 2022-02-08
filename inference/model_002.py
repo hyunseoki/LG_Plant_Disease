@@ -1,11 +1,12 @@
 import torch
 import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+import argparse
 import glob
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
-from datetime import datetime
 import timm
 import torch.nn as nn
 from src import (
@@ -38,70 +39,72 @@ class DaconModel(nn.Module):
 
         return out
 
+def main():
+    seed_everything(42)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--base_folder', type=str, default='./data/test')
+    parser.add_argument('--save_folder', type=str, default='./submission')
+    parser.add_argument('--weight_folder', type=str, default='./weights/0203180850')
+    parser.add_argument('--label_fn', type=str, default='./data/sample_submission.csv')
 
-seed_everything(42)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument('--device', type=str, default=device)
+    parser.add_argument('--batch_size', type=int, default=32)
 
-args = dict()
+    args = parser.parse_args()
 
-args['base_folder'] = './data/test'
-args['save_folder'] = './submission'
-args['weight_folder'] =  './checkpoint/0203180850'
-args['label_fn'] = './data/sample_submission.csv'
+    assert os.path.isdir(args.base_folder), 'wrong path'
+    Path(args.save_folder).mkdir(parents=True, exist_ok=True)
+    assert os.path.isdir(args.weight_folder), 'wrong path'
+    assert os.path.isfile(args.label_fn), 'wrong path'
 
-args['device'] = device
-args['batch_size'] = 32
+    test_df = pd.read_csv(args.label_fn)
 
-assert os.path.isdir(args['base_folder']), 'wrong path'
-Path(args['save_folder']).mkdir(parents=True, exist_ok=True)
-assert os.path.isdir(args['weight_folder']), 'wrong path'
-assert os.path.isfile(args['label_fn']), 'wrong path'
-
-test_df = pd.read_csv(args['label_fn'])
-
-test_dataset = DaconDataset(
-    base_folder=args['base_folder'],
-    label_df=test_df,
-    phase='test',
-    max_len= 320, 
-    transforms=get_test_transforms(),
-)
-
-test_data_loader = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=args['batch_size'],
-        shuffle=False,
-        num_workers=12,
-        pin_memory=True
+    test_dataset = DaconDataset(
+        base_folder=args.base_folder,
+        label_df=test_df,
+        phase='test',
+        max_len=320, 
+        transforms=get_test_transforms(),
     )
 
-model_cnn = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=25)
-rnn_model = DaconLSTM()
-model = DaconModel(
-    model_cnn=model_cnn,
-    model_rnn=rnn_model
-)
+    test_data_loader = torch.utils.data.DataLoader(
+            test_dataset,
+            batch_size=args.batch_size,
+            shuffle=False,
+            num_workers=12,
+            pin_memory=True
+        )
 
-weight_fns = glob.glob(args['weight_folder'] + '/*.pth')
-results = np.zeros(shape=(len(test_df), 25))
+    model_cnn = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=25)
+    
+    rnn_model = DaconLSTM()
+    model = DaconModel(
+        model_cnn=model_cnn,
+        model_rnn=rnn_model
+    )
 
-for weight_fn in weight_fns:
-    model = load_model_weights(model, weight_fn)
-    model.to(device)
-    model.eval()
+    weight_fns = glob.glob(args.weight_folder + '/*.pth')
+    results = np.zeros(shape=(len(test_df), 25))
 
-    for idx, sample in enumerate(tqdm(test_data_loader)):
-        img, csv = sample['image'].to(device), sample['csv'].to(device)
-        
-        with torch.no_grad():
-            output = model(img, csv)
+    for weight_fn in weight_fns:
+        model = load_model_weights(model, weight_fn)
+        model.to(device)
+        model.eval()
 
-        batch_index = idx * args['batch_size']
-        results[batch_index:batch_index+args['batch_size']] += output.clone().detach().cpu().numpy() ## soft-vote
-        
-voting_results = np.array([test_dataset.decode(np.argmax(result)) for result in results])
-test_df['label'] = voting_results
-# safe_fn = str(os.path.join(args['save_folder'], datetime.now().strftime("%m%d%H%M%S"))) + '.csv'
-safe_fn = str(os.path.join(args['save_folder'], 'model_002')) + '.csv'
-test_df.to_csv(safe_fn, index=False)
+        for idx, sample in enumerate(tqdm(test_data_loader)):
+            img, csv = sample['image'].to(device), sample['csv'].to(device)
+            with torch.no_grad():
+                output = model(img, csv)
+
+            batch_index = idx * args.batch_size
+            results[batch_index:batch_index+args.batch_size] += output.clone().detach().cpu().numpy() ## soft-vote
+
+    voting_results = np.array([test_dataset.decode(np.argmax(result)) for result in results])
+    test_df['label'] = voting_results
+    safe_fn = str(os.path.join(args.save_folder, 'model_002')) + '.csv'
+    test_df.to_csv(safe_fn, index=False)
+
+if __name__ == '__main__':
+    main()

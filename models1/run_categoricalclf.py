@@ -47,63 +47,61 @@ if __name__ == '__main__':
 	cnt = cnt + 1
 	print("FOLD NUMBER : ", cnt)
 	print("-"*100)
-	train_dict = [info_dict[k] for k in train_idx]
-	val_dict = [info_dict[k] for k in val_idx]
 
 	# non-pretrained cnn
 	_model_cnn = EfficientNet.from_pretrained(
-	    'efficientnet-b0', num_classes=_num_classes
+		'efficientnet-b0', num_classes=_num_classes
 	)
 
 	# pretrained rnn
 	_model_rnn = LSTM(
-	    input_dim=9,
-	    output_dim=_num_classes,
-	    hidden_dim=200,
-	    num_layers=1
+		input_dim=9,
+		output_dim=_num_classes,
+		hidden_dim=200,
+		num_layers=1
 	)
 
 	weight_path_rnn = os.path.join(
-	    _base_dir,
-	    'trained_rnn_weights',
-	    'best_model.pth'
+		_base_dir,
+		'trained_rnn_weights',
+		'best_model.pth'
 	)
 	_model_rnn.load_state_dict(torch.load(weight_path_rnn))
 
 	_model = EnsembleModel(
-	    model_cnn=_model_cnn,
-	    model_rnn=_model_rnn,
-	    num_classes=_num_classes
+		model_cnn=_model_cnn,
+		model_rnn=_model_rnn,
+		num_classes=_num_classes
 	)
 
 	# merge cnn & rnn
 	categorical_classifier = CategoricalClassifier(
-	    model=_model,
-	    device='cuda',
-	    num_gpus=_num_gpus,
-	    mode='combined' # 'cnn', 'rnn', 'combined'
-	    # weight_path='./best_model.pth'
+		model=_model,
+		device='cuda',
+		num_gpus=_num_gpus,
+		mode='combined' # 'cnn', 'rnn', 'combined'
+		# weight_path='./best_model.pth'
 	)
 
 	_train_dataloader, _val_dataloader = categorical_classifier.data_loader(
-	    images_dir=_images_dir,
-	    csv_dir=_csv_dir,
-	    batch_size=_batch_size,
-	    trainset_ratio=_trainset_ratio,
-	    imbalanced_ds=_imbalanced_ds,
-	    data_augmentation=_data_augmentation,
-	    data_preprocessing=_data_preprocessing,
-	    num_classes=_num_classes,
-	    onehot=_onehot,
-	    max_seq_length=_max_seq_length
+		images_dir=_images_dir,
+		csv_dir=_csv_dir,
+		batch_size=_batch_size,
+		trainset_ratio=_trainset_ratio,
+		imbalanced_ds=_imbalanced_ds,
+		data_augmentation=_data_augmentation,
+		data_preprocessing=_data_preprocessing,
+		num_classes=_num_classes,
+		onehot=_onehot,
+		max_seq_length=_max_seq_length
 	)
 
 	categorical_classifier.train(
-	    train_dataloader=_train_dataloader,
-	    val_dataloader=_val_dataloader,
-	    log_dir=_log_dir,
-	    epochs=_epochs,
-	    lr_begin=_lr_begin,
-	    logits=_logits,
-	    onehot=_onehot
+		train_dataloader=_train_dataloader,
+		val_dataloader=_val_dataloader,
+		log_dir=_log_dir,
+		epochs=_epochs,
+		lr_begin=_lr_begin,
+		logits=_logits,
+		onehot=_onehot
 	)

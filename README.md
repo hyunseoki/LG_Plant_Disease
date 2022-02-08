@@ -35,9 +35,10 @@
 ![cutmix_img](./asset/cutmix_image.png)  
 ![cutmix_tabular](./asset/cutmix_tabularData.png)  
 
-## 3. Ablation Study
+## 3. 개발환경 및 주요 라이브러리 버전  
 
-## 4. 주요 라이브러리  
+모델 1 ~ 6 : Windows Server 2019  
+모델 7 : Linux 20.04  
 
 python==3.8.5  
 numpy==1.21.2  
@@ -53,7 +54,7 @@ conda env create -f conda_requirements.txt ## 또는,
 pip install -r pip_requirements.txt
 ```
 
-## 5. 학습방법  
+## 4. 학습방법  
 
 - CNN의 Pre-task* 학습법 : models0\train_backbone.sh 실행  
 - RNN의 Pre-task* 학습법 : models1\run_categoricalclf_rnn.py 실행 (해당 파일 내 _base_dir을 환경에 맞게 변경 필요)
@@ -61,8 +62,8 @@ pip install -r pip_requirements.txt
 - 2~6번 모델 학습법 : models0\train_model1.sh 실행
 - 7번 모델 학습법 : models1\run_categoricalclf.py 실행 (해당 파일 내 _base_dir을 환경에 맞게 변경 필요)
 
-## 6. 추론방법  
+## 5. 추론방법  
 
-- inference\runner.sh 실행 ([model download](https://drive.google.com/file/d/1X0-bN_F1UMTZJsaqjrdFAUYTKJjRELOl/view?usp=sharing))
+- inference\runner.sh 실행
 - inference\runner.sh에서 TEST_DATA_FOLDER 및 LABEL_FN을 환경에 맞게 변경 필요
 - 최종 결과 파일은 inference\submission\final_results.csv 파일로 생성

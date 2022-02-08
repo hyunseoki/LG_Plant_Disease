@@ -82,7 +82,7 @@ if __name__ == '__main__':
 		mode='combined' # 'cnn', 'rnn', 'combined'
 		# weight_path='./best_model.pth'
 	)
-
+	
 	_train_dataloader, _val_dataloader = categorical_classifier.data_loader(
 		images_dir=_images_dir,
 		csv_dir=_csv_dir,

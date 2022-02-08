@@ -43,11 +43,6 @@ if __name__ == '__main__':
 
     print("START TRAINING")
 
-	print("-"*100)
-	cnt = cnt + 1
-	print("FOLD NUMBER : ", cnt)
-	print("-"*100)
-
 	# non-pretrained cnn
 	_model_cnn = EfficientNet.from_pretrained(
 		'efficientnet-b0', num_classes=_num_classes

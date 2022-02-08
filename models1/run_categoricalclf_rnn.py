@@ -43,12 +43,6 @@ if __name__ == '__main__':
 
 	print("START TRAINING")
 
-	# non-pretrained cnn
-	_model_cnn = EfficientNet.from_pretrained(
-		'efficientnet-b0', num_classes=_num_classes
-	)
-
-	# pretrained rnn
 	_model_rnn = LSTM(
 		input_dim=9,
 		output_dim=_num_classes,
@@ -56,25 +50,11 @@ if __name__ == '__main__':
 		num_layers=1
 	)
 
-	weight_path_rnn = os.path.join(
-		_base_dir,
-		'trained_rnn_weights',
-		'best_model.pth'
-	)
-	_model_rnn.load_state_dict(torch.load(weight_path_rnn))
-
-	_model = EnsembleModel(
-		model_cnn=_model_cnn,
-		model_rnn=_model_rnn,
-		num_classes=_num_classes
-	)
-
-	# merge cnn & rnn
 	categorical_classifier = CategoricalClassifier(
-		model=_model,
+		model=_model_rnn,
 		device='cuda',
 		num_gpus=_num_gpus,
-		mode='combined' # 'cnn', 'rnn', 'combined'
+		mode='rnn' # 'cnn', 'rnn', 'combined'
 		# weight_path='./best_model.pth'
 	)
 
